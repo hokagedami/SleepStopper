@@ -55,7 +55,7 @@ namespace WindowsFormsApp1
         {
             //keepOnSw.Checked = true;
             activate = false;
-            actionButton.Text = "Activate";
+            actionButton.Text = "START";
             actionButton.BackColor = activate ? Color.Red : Color.Green;
             textBox.AppendText("Application started successfully......");
             //Debug.WriteLine($"Activation Status:: {activate.ToString().ToUpper()}");
@@ -71,9 +71,9 @@ namespace WindowsFormsApp1
         {
             DoAction(!activate);
             var btn = (Button)sender;
-            btn.Text = activate ? "Deactivate" : "Activate";
+            btn.Text = activate ? "STOP" : "START";
             actionButton.BackColor = activate ? Color.Red : Color.Green;
-            var text = activate ? "Sleep Deactivated...." : "Sleep Activated....";
+            var text = activate ? "System Auto-Sleep Deactivated...." : "System Auto-Sleep Activated....";
             textBox.Text += Environment.NewLine;
             textBox.AppendText(text);
         }
