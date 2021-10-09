@@ -41,23 +41,26 @@ namespace WindowsFormsApp1
             {
                 SetThreadExecutionState(EXECUTION_STATE.ES_CONTINUOUS);
             }
-            var text = activate ? "System Auto-Sleep Deactivated...." : "System Auto-Sleep Activated....";
+            activate = !activate;
+            var text = activate ? "System Auto-Sleep Deactivated." : "System Auto-Sleep Activated.";
             textBox.Text += Environment.NewLine;
             textBox.AppendText(text);
-            activate = !activate;
             this.startStopToolStripMenuItem.Text = activate ? "DEACTIVATE" : "ACTIVATE";
         }
         private void ActionFormLoad(object sender, EventArgs e)
         {
             activate = false;
+            var text_ = !activate ? "Active" : "Inactive";
             actionButton.Text = "ACTIVATE";
             actionButton.BackColor = activate ? Color.Red : Color.Green;
             textBox.AppendText("Application started successfully....");
+            textBox.Text += Environment.NewLine;
+            textBox.AppendText($"System Auto-Sleep {text_}.");
         }
 
         private void ActionFormClosed(object sender, FormClosedEventArgs e)
         {
-            textBox.AppendText("Closing application....");
+            textBox.AppendText("Closing application!");
             DoAction(false);
         }
 

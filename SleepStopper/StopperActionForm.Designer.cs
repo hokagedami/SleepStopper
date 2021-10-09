@@ -51,6 +51,7 @@ namespace WindowsFormsApp1
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.systemTrayIconContextMenuStrip.SuspendLayout();
             this.SuspendLayout();
+            this.activate = false;
             // 
             // actionButton
             // 
