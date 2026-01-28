@@ -1,0 +1,68 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:SleepStopper.ViewModels"
+        x:Class="SleepStopper.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        Title="No Sleeping"
+        Width="350"
+        Height="200"
+        MinWidth="350"
+        MinHeight="200"
+        MaxWidth="420"
+        MaxHeight="220"
+        CanResize="True"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Styles>
+        <Style Selector="Button.action">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="Width" Value="140"/>
+            <Setter Property="Height" Value="45"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style Selector="Button.action.inactive">
+            <Setter Property="Background" Value="#3CB371"/>
+        </Style>
+        <Style Selector="Button.action.inactive:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#2E8B57"/>
+        </Style>
+        <Style Selector="Button.action.active">
+            <Setter Property="Background" Value="#DC143C"/>
+        </Style>
+        <Style Selector="Button.action.active:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#B22222"/>
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*" Margin="10">
+        <Button Grid.Row="0"
+                Classes="action"
+                Classes.active="{Binding IsActive}"
+                Classes.inactive="{Binding !IsActive}"
+                Content="{Binding ButtonText}"
+                Command="{Binding ToggleCommand}"
+                HorizontalAlignment="Center"
+                Margin="0,10,0,10"/>
+
+        <TextBox Grid.Row="1"
+                 Text="{Binding LogText}"
+                 IsReadOnly="True"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 Background="#1E1E1E"
+                 Foreground="White"
+                 FontFamily="Consolas, Courier New, monospace"
+                 FontSize="11"
+                 Margin="20,5,20,10"/>
+    </Grid>
+
+    <NativeMenu.Menu>
+        <NativeMenu>
+            <NativeMenuItem Header="Toggle" Command="{Binding ToggleCommand}"/>
+        </NativeMenu>
+    </NativeMenu.Menu>
+
+</Window>
