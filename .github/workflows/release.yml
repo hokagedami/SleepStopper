@@ -313,50 +313,6 @@ jobs:
         rpmbuild -bb ~/rpmbuild/SPECS/sleepstopper-x64.spec --define "_sourcedir $PWD"
         cp ~/rpmbuild/RPMS/x86_64/*.rpm ./SleepStopper-linux-x64.rpm
 
-    - name: Create ARM64 RPM package
-      run: |
-        mkdir -p rpm-arm64-root/usr/bin
-        mkdir -p rpm-arm64-root/usr/share/applications
-
-        cp ./publish/linux-arm64/SleepStopper rpm-arm64-root/usr/bin/sleepstopper
-        chmod +x rpm-arm64-root/usr/bin/sleepstopper
-
-        cat > rpm-arm64-root/usr/share/applications/sleepstopper.desktop << 'DESKTOP'
-        [Desktop Entry]
-        Name=SleepStopper
-        Comment=Prevent system sleep
-        Exec=/usr/bin/sleepstopper
-        Terminal=false
-        Type=Application
-        Categories=Utility;
-        DESKTOP
-
-        cat > ~/rpmbuild/SPECS/sleepstopper-arm64.spec << 'SPEC'
-        Name: sleepstopper
-        Version: 1.0.0
-        Release: 1
-        Summary: Cross-platform application to prevent system sleep
-        License: MIT
-        BuildArch: aarch64
-
-        %description
-        SleepStopper prevents your computer from going to sleep.
-        Features toggle button, system tray integration, and activity log.
-
-        %install
-        mkdir -p %{buildroot}/usr/bin
-        mkdir -p %{buildroot}/usr/share/applications
-        cp -r %{_sourcedir}/rpm-arm64-root/usr/* %{buildroot}/usr/
-
-        %files
-        /usr/bin/sleepstopper
-        /usr/share/applications/sleepstopper.desktop
-        SPEC
-
-        cp -r rpm-arm64-root ~/rpmbuild/SOURCES/
-        rpmbuild -bb ~/rpmbuild/SPECS/sleepstopper-arm64.spec --define "_sourcedir $PWD" --target aarch64
-        cp ~/rpmbuild/RPMS/aarch64/*.rpm ./SleepStopper-linux-arm64.rpm
-
     - name: Upload Linux artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -367,7 +323,6 @@ jobs:
           ./SleepStopper-linux-x64.deb
           ./SleepStopper-linux-arm64.deb
           ./SleepStopper-linux-x64.rpm
-          ./SleepStopper-linux-arm64.rpm
 
   build-macos:
     runs-on: macos-latest
@@ -449,14 +404,25 @@ jobs:
         ln -s /Applications dmg-x64/Applications
         hdiutil create -volname "SleepStopper" -srcfolder dmg-x64 -ov -format UDZO SleepStopper-macos-x64.dmg
 
+    - name: Clean up to free disk space
+      run: |
+        rm -rf ./publish
+        rm -rf ./SleepStopper-macos-x64
+        rm -rf ./SleepStopper-macos-arm64
+        rm -rf dmg-x64
+        rm -rf SleepStopper-x64.app
+
     - name: Create macOS ARM64 app bundle and DMG
       run: |
         # Create .app bundle structure
         mkdir -p SleepStopper-arm64.app/Contents/MacOS
         mkdir -p SleepStopper-arm64.app/Contents/Resources
 
+        # Re-publish for ARM64 only
+        dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish-arm64
+
         # Copy executable
-        cp ./publish/osx-arm64/SleepStopper SleepStopper-arm64.app/Contents/MacOS/SleepStopper
+        cp ./publish-arm64/SleepStopper SleepStopper-arm64.app/Contents/MacOS/SleepStopper
         chmod +x SleepStopper-arm64.app/Contents/MacOS/SleepStopper
 
         # Create Info.plist
@@ -599,7 +565,7 @@ jobs:
           | Architecture | DEB (Debian/Ubuntu) | RPM (Fedora/RHEL) | Archive (.tar.gz) |
           |--------------|---------------------|-------------------|-------------------|
           | x64 (64-bit) | `SleepStopper-linux-x64.deb` | `SleepStopper-linux-x64.rpm` | `SleepStopper-linux-x64.tar.gz` |
-          | ARM64 | `SleepStopper-linux-arm64.deb` | `SleepStopper-linux-arm64.rpm` | `SleepStopper-linux-arm64.tar.gz` |
+          | ARM64 | `SleepStopper-linux-arm64.deb` | - | `SleepStopper-linux-arm64.tar.gz` |
 
           #### macOS
           | Architecture | DMG Installer | Archive (.tar.gz) |
