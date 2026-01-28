@@ -176,13 +176,15 @@ jobs:
           #### Linux
           1. Download `SleepStopper-linux-x64.tar.gz` (or arm64 for ARM devices)
           2. Extract: `tar -xzf SleepStopper-linux-x64.tar.gz`
-          3. Run: `chmod +x SleepStopper && ./SleepStopper`
+          3. Enter directory: `cd SleepStopper-linux-x64`
+          4. Run: `chmod +x SleepStopper && ./SleepStopper`
 
           #### macOS
           1. Download `SleepStopper-macos-x64.tar.gz` (or arm64 for Apple Silicon)
           2. Extract: `tar -xzf SleepStopper-macos-x64.tar.gz`
-          3. Run: `chmod +x SleepStopper && ./SleepStopper`
-          4. If blocked, go to System Preferences > Security & Privacy > Allow
+          3. Enter directory: `cd SleepStopper-macos-x64`
+          4. Run: `chmod +x SleepStopper && ./SleepStopper`
+          5. If blocked, go to System Preferences > Security & Privacy > Allow
 
           ### Usage
           - Click **ACTIVATE** to prevent sleep (button turns red)
