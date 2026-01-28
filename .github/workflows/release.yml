@@ -404,61 +404,6 @@ jobs:
         ln -s /Applications dmg-x64/Applications
         hdiutil create -volname "SleepStopper" -srcfolder dmg-x64 -ov -format UDZO SleepStopper-macos-x64.dmg
 
-    - name: Clean up to free disk space
-      run: |
-        rm -rf ./publish
-        rm -rf ./SleepStopper-macos-x64
-        rm -rf ./SleepStopper-macos-arm64
-        rm -rf dmg-x64
-        rm -rf SleepStopper-x64.app
-
-    - name: Create macOS ARM64 app bundle and DMG
-      run: |
-        # Create .app bundle structure
-        mkdir -p SleepStopper-arm64.app/Contents/MacOS
-        mkdir -p SleepStopper-arm64.app/Contents/Resources
-
-        # Re-publish for ARM64 only
-        dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish-arm64
-
-        # Copy executable
-        cp ./publish-arm64/SleepStopper SleepStopper-arm64.app/Contents/MacOS/SleepStopper
-        chmod +x SleepStopper-arm64.app/Contents/MacOS/SleepStopper
-
-        # Create Info.plist
-        cat > SleepStopper-arm64.app/Contents/Info.plist << 'PLIST'
-        <?xml version="1.0" encoding="UTF-8"?>
-        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-        <plist version="1.0">
-        <dict>
-            <key>CFBundleExecutable</key>
-            <string>SleepStopper</string>
-            <key>CFBundleIdentifier</key>
-            <string>com.sleepstopper.app</string>
-            <key>CFBundleName</key>
-            <string>SleepStopper</string>
-            <key>CFBundleDisplayName</key>
-            <string>SleepStopper</string>
-            <key>CFBundleVersion</key>
-            <string>1.0.0</string>
-            <key>CFBundleShortVersionString</key>
-            <string>1.0.0</string>
-            <key>CFBundlePackageType</key>
-            <string>APPL</string>
-            <key>LSMinimumSystemVersion</key>
-            <string>11.0</string>
-            <key>NSHighResolutionCapable</key>
-            <true/>
-        </dict>
-        </plist>
-        PLIST
-
-        # Create DMG
-        mkdir -p dmg-arm64
-        cp -r SleepStopper-arm64.app dmg-arm64/SleepStopper.app
-        ln -s /Applications dmg-arm64/Applications
-        hdiutil create -volname "SleepStopper" -srcfolder dmg-arm64 -ov -format UDZO SleepStopper-macos-arm64.dmg
-
     - name: Upload macOS artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -467,7 +412,6 @@ jobs:
           ./SleepStopper-macos-x64.tar.gz
           ./SleepStopper-macos-arm64.tar.gz
           ./SleepStopper-macos-x64.dmg
-          ./SleepStopper-macos-arm64.dmg
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -497,7 +441,7 @@ jobs:
           artifacts/linux-builds/*.deb
           artifacts/linux-builds/*.rpm
           artifacts/macos-builds/*.tar.gz
-          artifacts/macos-builds/*.dmg
+          artifacts/macos-builds/SleepStopper-macos-x64.dmg
         body: |
           ## SleepStopper ${{ github.ref_name }}
 
@@ -571,6 +515,6 @@ jobs:
           | Architecture | DMG Installer | Archive (.tar.gz) |
           |--------------|---------------|-------------------|
           | x64 (Intel) | `SleepStopper-macos-x64.dmg` | `SleepStopper-macos-x64.tar.gz` |
-          | ARM64 (Apple Silicon) | `SleepStopper-macos-arm64.dmg` | `SleepStopper-macos-arm64.tar.gz` |
+          | ARM64 (Apple Silicon) | - | `SleepStopper-macos-arm64.tar.gz` |
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
