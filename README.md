@@ -26,49 +26,54 @@ A cross-platform desktop application that prevents your computer from going to s
 
 ### Linux
 
-1. Download `SleepStopper-linux-x64.tar.gz` from the [Releases](../../releases) page
-2. Extract and install:
-   ```bash
-   tar -xzf SleepStopper-linux-x64.tar.gz
-   cd SleepStopper-linux-x64
-   chmod +x SleepStopper
-   ./SleepStopper
-   ```
+#### Debian/Ubuntu (.deb)
+```bash
+# Download and install
+sudo dpkg -i SleepStopper-linux-x64.deb
 
-**Optional:** Move to a system location:
+# Run
+sleepstopper
+```
+
+#### Fedora/RHEL/CentOS (.rpm)
+```bash
+# Download and install
+sudo rpm -i SleepStopper-linux-x64.rpm
+
+# Run
+sleepstopper
+```
+
+#### Portable (tar.gz)
+```bash
+tar -xzf SleepStopper-linux-x64.tar.gz
+cd SleepStopper-linux-x64
+chmod +x SleepStopper
+./SleepStopper
+```
+
+**Optional:** Move portable version to a system location:
 ```bash
 sudo mv SleepStopper-linux-x64 /opt/SleepStopper
 sudo ln -s /opt/SleepStopper/SleepStopper /usr/local/bin/sleepstopper
 ```
 
-**Create Desktop Entry (Optional):**
-```bash
-cat > ~/.local/share/applications/sleepstopper.desktop << EOF
-[Desktop Entry]
-Name=SleepStopper
-Exec=/opt/SleepStopper/SleepStopper
-Icon=/opt/SleepStopper/sleep.ico
-Type=Application
-Categories=Utility;
-EOF
-```
-
 ### macOS
 
-1. Download `SleepStopper-macos-x64.tar.gz` from the [Releases](../../releases) page
-2. Extract and run:
-   ```bash
-   tar -xzf SleepStopper-macos-x64.tar.gz
-   cd SleepStopper-macos-x64
-   chmod +x SleepStopper
-   ./SleepStopper
-   ```
+#### DMG Installer (Recommended)
+1. Download `SleepStopper-macos-x64.dmg` (Intel) or `SleepStopper-macos-arm64.dmg` (Apple Silicon)
+2. Open the DMG file
+3. Drag SleepStopper to the Applications folder
+4. Launch from Applications
 
 **Note:** On first run, macOS may block the app. Go to **System Preferences > Security & Privacy > General** and click "Open Anyway".
 
-**Optional:** Move to Applications:
+#### Portable (tar.gz)
 ```bash
-mv SleepStopper-macos-x64 /Applications/SleepStopper
+tar -xzf SleepStopper-macos-x64.tar.gz
+cd SleepStopper-macos-x64
+chmod +x SleepStopper
+./SleepStopper
 ```
 
 ### Build from Source

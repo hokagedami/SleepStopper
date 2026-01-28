@@ -172,6 +172,9 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Install packaging tools
+      run: sudo apt-get update && sudo apt-get install -y rpm
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -198,6 +201,162 @@ jobs:
         cp -r ./publish/linux-arm64/* ./SleepStopper-linux-arm64/
         tar -czvf SleepStopper-linux-arm64.tar.gz SleepStopper-linux-arm64
 
+    - name: Create x64 DEB package
+      run: |
+        mkdir -p deb-x64/DEBIAN
+        mkdir -p deb-x64/usr/bin
+        mkdir -p deb-x64/usr/share/applications
+        mkdir -p deb-x64/usr/share/icons/hicolor/256x256/apps
+
+        cp ./publish/linux-x64/SleepStopper deb-x64/usr/bin/sleepstopper
+        chmod +x deb-x64/usr/bin/sleepstopper
+
+        cat > deb-x64/DEBIAN/control << 'CTRL'
+        Package: sleepstopper
+        Version: 1.0.0
+        Section: utils
+        Priority: optional
+        Architecture: amd64
+        Maintainer: SleepStopper
+        Description: Cross-platform application to prevent system sleep
+         SleepStopper prevents your computer from going to sleep.
+         Features toggle button, system tray integration, and activity log.
+        CTRL
+
+        cat > deb-x64/usr/share/applications/sleepstopper.desktop << 'DESKTOP'
+        [Desktop Entry]
+        Name=SleepStopper
+        Comment=Prevent system sleep
+        Exec=/usr/bin/sleepstopper
+        Terminal=false
+        Type=Application
+        Categories=Utility;
+        DESKTOP
+
+        dpkg-deb --build deb-x64 SleepStopper-linux-x64.deb
+
+    - name: Create ARM64 DEB package
+      run: |
+        mkdir -p deb-arm64/DEBIAN
+        mkdir -p deb-arm64/usr/bin
+        mkdir -p deb-arm64/usr/share/applications
+
+        cp ./publish/linux-arm64/SleepStopper deb-arm64/usr/bin/sleepstopper
+        chmod +x deb-arm64/usr/bin/sleepstopper
+
+        cat > deb-arm64/DEBIAN/control << 'CTRL'
+        Package: sleepstopper
+        Version: 1.0.0
+        Section: utils
+        Priority: optional
+        Architecture: arm64
+        Maintainer: SleepStopper
+        Description: Cross-platform application to prevent system sleep
+         SleepStopper prevents your computer from going to sleep.
+         Features toggle button, system tray integration, and activity log.
+        CTRL
+
+        cat > deb-arm64/usr/share/applications/sleepstopper.desktop << 'DESKTOP'
+        [Desktop Entry]
+        Name=SleepStopper
+        Comment=Prevent system sleep
+        Exec=/usr/bin/sleepstopper
+        Terminal=false
+        Type=Application
+        Categories=Utility;
+        DESKTOP
+
+        dpkg-deb --build deb-arm64 SleepStopper-linux-arm64.deb
+
+    - name: Create x64 RPM package
+      run: |
+        mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+        mkdir -p rpm-x64-root/usr/bin
+        mkdir -p rpm-x64-root/usr/share/applications
+
+        cp ./publish/linux-x64/SleepStopper rpm-x64-root/usr/bin/sleepstopper
+        chmod +x rpm-x64-root/usr/bin/sleepstopper
+
+        cat > rpm-x64-root/usr/share/applications/sleepstopper.desktop << 'DESKTOP'
+        [Desktop Entry]
+        Name=SleepStopper
+        Comment=Prevent system sleep
+        Exec=/usr/bin/sleepstopper
+        Terminal=false
+        Type=Application
+        Categories=Utility;
+        DESKTOP
+
+        cat > ~/rpmbuild/SPECS/sleepstopper-x64.spec << 'SPEC'
+        Name: sleepstopper
+        Version: 1.0.0
+        Release: 1
+        Summary: Cross-platform application to prevent system sleep
+        License: MIT
+        BuildArch: x86_64
+
+        %description
+        SleepStopper prevents your computer from going to sleep.
+        Features toggle button, system tray integration, and activity log.
+
+        %install
+        mkdir -p %{buildroot}/usr/bin
+        mkdir -p %{buildroot}/usr/share/applications
+        cp -r %{_sourcedir}/rpm-x64-root/usr/* %{buildroot}/usr/
+
+        %files
+        /usr/bin/sleepstopper
+        /usr/share/applications/sleepstopper.desktop
+        SPEC
+
+        cp -r rpm-x64-root ~/rpmbuild/SOURCES/
+        rpmbuild -bb ~/rpmbuild/SPECS/sleepstopper-x64.spec --define "_sourcedir $PWD"
+        cp ~/rpmbuild/RPMS/x86_64/*.rpm ./SleepStopper-linux-x64.rpm
+
+    - name: Create ARM64 RPM package
+      run: |
+        mkdir -p rpm-arm64-root/usr/bin
+        mkdir -p rpm-arm64-root/usr/share/applications
+
+        cp ./publish/linux-arm64/SleepStopper rpm-arm64-root/usr/bin/sleepstopper
+        chmod +x rpm-arm64-root/usr/bin/sleepstopper
+
+        cat > rpm-arm64-root/usr/share/applications/sleepstopper.desktop << 'DESKTOP'
+        [Desktop Entry]
+        Name=SleepStopper
+        Comment=Prevent system sleep
+        Exec=/usr/bin/sleepstopper
+        Terminal=false
+        Type=Application
+        Categories=Utility;
+        DESKTOP
+
+        cat > ~/rpmbuild/SPECS/sleepstopper-arm64.spec << 'SPEC'
+        Name: sleepstopper
+        Version: 1.0.0
+        Release: 1
+        Summary: Cross-platform application to prevent system sleep
+        License: MIT
+        BuildArch: aarch64
+
+        %description
+        SleepStopper prevents your computer from going to sleep.
+        Features toggle button, system tray integration, and activity log.
+
+        %install
+        mkdir -p %{buildroot}/usr/bin
+        mkdir -p %{buildroot}/usr/share/applications
+        cp -r %{_sourcedir}/rpm-arm64-root/usr/* %{buildroot}/usr/
+
+        %files
+        /usr/bin/sleepstopper
+        /usr/share/applications/sleepstopper.desktop
+        SPEC
+
+        cp -r rpm-arm64-root ~/rpmbuild/SOURCES/
+        rpmbuild -bb ~/rpmbuild/SPECS/sleepstopper-arm64.spec --define "_sourcedir $PWD" --target aarch64
+        cp ~/rpmbuild/RPMS/aarch64/*.rpm ./SleepStopper-linux-arm64.rpm
+
     - name: Upload Linux artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -205,6 +364,10 @@ jobs:
         path: |
           ./SleepStopper-linux-x64.tar.gz
           ./SleepStopper-linux-arm64.tar.gz
+          ./SleepStopper-linux-x64.deb
+          ./SleepStopper-linux-arm64.deb
+          ./SleepStopper-linux-x64.rpm
+          ./SleepStopper-linux-arm64.rpm
 
   build-macos:
     runs-on: macos-latest
@@ -242,6 +405,94 @@ jobs:
         cp -r ./publish/osx-arm64/* ./SleepStopper-macos-arm64/
         tar -czvf SleepStopper-macos-arm64.tar.gz SleepStopper-macos-arm64
 
+    - name: Create macOS x64 app bundle and DMG
+      run: |
+        # Create .app bundle structure
+        mkdir -p SleepStopper-x64.app/Contents/MacOS
+        mkdir -p SleepStopper-x64.app/Contents/Resources
+
+        # Copy executable
+        cp ./publish/osx-x64/SleepStopper SleepStopper-x64.app/Contents/MacOS/SleepStopper
+        chmod +x SleepStopper-x64.app/Contents/MacOS/SleepStopper
+
+        # Create Info.plist
+        cat > SleepStopper-x64.app/Contents/Info.plist << 'PLIST'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>SleepStopper</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.sleepstopper.app</string>
+            <key>CFBundleName</key>
+            <string>SleepStopper</string>
+            <key>CFBundleDisplayName</key>
+            <string>SleepStopper</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>10.15</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+        </dict>
+        </plist>
+        PLIST
+
+        # Create DMG
+        mkdir -p dmg-x64
+        cp -r SleepStopper-x64.app dmg-x64/SleepStopper.app
+        ln -s /Applications dmg-x64/Applications
+        hdiutil create -volname "SleepStopper" -srcfolder dmg-x64 -ov -format UDZO SleepStopper-macos-x64.dmg
+
+    - name: Create macOS ARM64 app bundle and DMG
+      run: |
+        # Create .app bundle structure
+        mkdir -p SleepStopper-arm64.app/Contents/MacOS
+        mkdir -p SleepStopper-arm64.app/Contents/Resources
+
+        # Copy executable
+        cp ./publish/osx-arm64/SleepStopper SleepStopper-arm64.app/Contents/MacOS/SleepStopper
+        chmod +x SleepStopper-arm64.app/Contents/MacOS/SleepStopper
+
+        # Create Info.plist
+        cat > SleepStopper-arm64.app/Contents/Info.plist << 'PLIST'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>CFBundleExecutable</key>
+            <string>SleepStopper</string>
+            <key>CFBundleIdentifier</key>
+            <string>com.sleepstopper.app</string>
+            <key>CFBundleName</key>
+            <string>SleepStopper</string>
+            <key>CFBundleDisplayName</key>
+            <string>SleepStopper</string>
+            <key>CFBundleVersion</key>
+            <string>1.0.0</string>
+            <key>CFBundleShortVersionString</key>
+            <string>1.0.0</string>
+            <key>CFBundlePackageType</key>
+            <string>APPL</string>
+            <key>LSMinimumSystemVersion</key>
+            <string>11.0</string>
+            <key>NSHighResolutionCapable</key>
+            <true/>
+        </dict>
+        </plist>
+        PLIST
+
+        # Create DMG
+        mkdir -p dmg-arm64
+        cp -r SleepStopper-arm64.app dmg-arm64/SleepStopper.app
+        ln -s /Applications dmg-arm64/Applications
+        hdiutil create -volname "SleepStopper" -srcfolder dmg-arm64 -ov -format UDZO SleepStopper-macos-arm64.dmg
+
     - name: Upload macOS artifacts
       uses: actions/upload-artifact@v4
       with:
@@ -249,6 +500,8 @@ jobs:
         path: |
           ./SleepStopper-macos-x64.tar.gz
           ./SleepStopper-macos-arm64.tar.gz
+          ./SleepStopper-macos-x64.dmg
+          ./SleepStopper-macos-arm64.dmg
 
   release:
     needs: [build-windows, build-linux, build-macos]
@@ -275,7 +528,10 @@ jobs:
           artifacts/windows-builds/*.msi
           artifacts/windows-builds/*.zip
           artifacts/linux-builds/*.tar.gz
+          artifacts/linux-builds/*.deb
+          artifacts/linux-builds/*.rpm
           artifacts/macos-builds/*.tar.gz
+          artifacts/macos-builds/*.dmg
         body: |
           ## SleepStopper ${{ github.ref_name }}
 
@@ -284,26 +540,45 @@ jobs:
           ### Installation
 
           #### Windows (Installer - Recommended)
-          1. Download `SleepStopper-windows-x64.msi` (or x86/arm64 for other architectures)
+          1. Download `SleepStopper-windows-x64.msi` (or x86/arm64)
           2. Run the installer
           3. Launch from Start Menu
 
           #### Windows (Portable)
           - **Direct exe**: Download `SleepStopper-windows-x64.exe` and run directly
-          - **Zip archive**: Download `SleepStopper-windows-x64.zip`, extract, and run `SleepStopper.exe`
+          - **Zip archive**: Download `SleepStopper-windows-x64.zip`, extract, run `SleepStopper.exe`
 
-          #### Linux
-          1. Download `SleepStopper-linux-x64.tar.gz` (or arm64 for ARM devices)
-          2. Extract: `tar -xzf SleepStopper-linux-x64.tar.gz`
-          3. Enter directory: `cd SleepStopper-linux-x64`
-          4. Run: `chmod +x SleepStopper && ./SleepStopper`
+          #### Linux (Debian/Ubuntu)
+          ```bash
+          sudo dpkg -i SleepStopper-linux-x64.deb
+          sleepstopper
+          ```
 
-          #### macOS
-          1. Download `SleepStopper-macos-x64.tar.gz` (or arm64 for Apple Silicon)
-          2. Extract: `tar -xzf SleepStopper-macos-x64.tar.gz`
-          3. Enter directory: `cd SleepStopper-macos-x64`
-          4. Run: `chmod +x SleepStopper && ./SleepStopper`
-          5. If blocked, go to System Preferences > Security & Privacy > Allow
+          #### Linux (Fedora/RHEL/CentOS)
+          ```bash
+          sudo rpm -i SleepStopper-linux-x64.rpm
+          sleepstopper
+          ```
+
+          #### Linux (Portable)
+          ```bash
+          tar -xzf SleepStopper-linux-x64.tar.gz
+          cd SleepStopper-linux-x64
+          chmod +x SleepStopper && ./SleepStopper
+          ```
+
+          #### macOS (DMG - Recommended)
+          1. Download `SleepStopper-macos-x64.dmg` (Intel) or `SleepStopper-macos-arm64.dmg` (Apple Silicon)
+          2. Open the DMG file
+          3. Drag SleepStopper to Applications
+          4. If blocked: System Preferences > Security & Privacy > Allow
+
+          #### macOS (Portable)
+          ```bash
+          tar -xzf SleepStopper-macos-x64.tar.gz
+          cd SleepStopper-macos-x64
+          chmod +x SleepStopper && ./SleepStopper
+          ```
 
           ### Usage
           - Click **ACTIVATE** to prevent sleep (button turns red)
@@ -313,17 +588,23 @@ jobs:
 
           ### Downloads
 
-          | Platform | Architecture | Installer | Portable (exe) | Portable (zip) |
-          |----------|--------------|-----------|----------------|----------------|
-          | Windows | x64 (64-bit) | `SleepStopper-windows-x64.msi` | `SleepStopper-windows-x64.exe` | `SleepStopper-windows-x64.zip` |
-          | Windows | x86 (32-bit) | `SleepStopper-windows-x86.msi` | `SleepStopper-windows-x86.exe` | `SleepStopper-windows-x86.zip` |
-          | Windows | ARM64 | `SleepStopper-windows-arm64.msi` | `SleepStopper-windows-arm64.exe` | `SleepStopper-windows-arm64.zip` |
+          #### Windows
+          | Architecture | Installer (.msi) | Portable (.exe) | Archive (.zip) |
+          |--------------|------------------|-----------------|----------------|
+          | x64 (64-bit) | `SleepStopper-windows-x64.msi` | `SleepStopper-windows-x64.exe` | `SleepStopper-windows-x64.zip` |
+          | x86 (32-bit) | `SleepStopper-windows-x86.msi` | `SleepStopper-windows-x86.exe` | `SleepStopper-windows-x86.zip` |
+          | ARM64 | `SleepStopper-windows-arm64.msi` | `SleepStopper-windows-arm64.exe` | `SleepStopper-windows-arm64.zip` |
 
-          | Platform | Architecture | Archive |
-          |----------|--------------|---------|
-          | Linux | x64 (64-bit) | `SleepStopper-linux-x64.tar.gz` |
-          | Linux | ARM64 | `SleepStopper-linux-arm64.tar.gz` |
-          | macOS | x64 (Intel) | `SleepStopper-macos-x64.tar.gz` |
-          | macOS | ARM64 (Apple Silicon) | `SleepStopper-macos-arm64.tar.gz` |
+          #### Linux
+          | Architecture | DEB (Debian/Ubuntu) | RPM (Fedora/RHEL) | Archive (.tar.gz) |
+          |--------------|---------------------|-------------------|-------------------|
+          | x64 (64-bit) | `SleepStopper-linux-x64.deb` | `SleepStopper-linux-x64.rpm` | `SleepStopper-linux-x64.tar.gz` |
+          | ARM64 | `SleepStopper-linux-arm64.deb` | `SleepStopper-linux-arm64.rpm` | `SleepStopper-linux-arm64.tar.gz` |
+
+          #### macOS
+          | Architecture | DMG Installer | Archive (.tar.gz) |
+          |--------------|---------------|-------------------|
+          | x64 (Intel) | `SleepStopper-macos-x64.dmg` | `SleepStopper-macos-x64.tar.gz` |
+          | ARM64 (Apple Silicon) | `SleepStopper-macos-arm64.dmg` | `SleepStopper-macos-arm64.tar.gz` |
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
