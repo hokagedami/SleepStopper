@@ -1,73 +1,166 @@
 # SleepStopper
 
-A cross-platform application that prevents your computer from going to sleep.
+A cross-platform desktop application that prevents your computer from going to sleep. Keep your system awake during long downloads, presentations, or any task that requires uninterrupted operation.
 
 ## Features
 
-- Toggle sleep prevention with a single button click
-- System tray integration with context menu
-- Activity log display
-- Cross-platform support: Windows, Linux, and macOS
-
-## Requirements
-
-- .NET 8.0 Runtime (or use self-contained builds)
+- One-click toggle to prevent/allow system sleep
+- System tray integration for background operation
+- Real-time activity log
+- Cross-platform: Windows, Linux, and macOS
+- Lightweight and resource-efficient
 
 ## Installation
 
-### Pre-built Binaries
+### Windows
 
-Download the latest release for your platform from the [Releases](../../releases) page.
+1. Download `SleepStopper-windows-x64.zip` from the [Releases](../../releases) page
+2. Extract the zip file to a folder of your choice (e.g., `C:\Program Files\SleepStopper`)
+3. Run `SleepStopper.exe`
+
+**Optional:** Create a shortcut to `SleepStopper.exe` on your Desktop or Start Menu for easy access.
+
+**Run at Startup (Optional):**
+1. Press `Win + R`, type `shell:startup`, and press Enter
+2. Create a shortcut to `SleepStopper.exe` in this folder
+
+### Linux
+
+1. Download `SleepStopper-linux-x64.tar.gz` from the [Releases](../../releases) page
+2. Extract and install:
+   ```bash
+   tar -xzf SleepStopper-linux-x64.tar.gz
+   cd SleepStopper-linux-x64
+   chmod +x SleepStopper
+   ./SleepStopper
+   ```
+
+**Optional:** Move to a system location:
+```bash
+sudo mv SleepStopper-linux-x64 /opt/SleepStopper
+sudo ln -s /opt/SleepStopper/SleepStopper /usr/local/bin/sleepstopper
+```
+
+**Create Desktop Entry (Optional):**
+```bash
+cat > ~/.local/share/applications/sleepstopper.desktop << EOF
+[Desktop Entry]
+Name=SleepStopper
+Exec=/opt/SleepStopper/SleepStopper
+Icon=/opt/SleepStopper/sleep.ico
+Type=Application
+Categories=Utility;
+EOF
+```
+
+### macOS
+
+1. Download `SleepStopper-macos-x64.tar.gz` from the [Releases](../../releases) page
+2. Extract and run:
+   ```bash
+   tar -xzf SleepStopper-macos-x64.tar.gz
+   cd SleepStopper-macos-x64
+   chmod +x SleepStopper
+   ./SleepStopper
+   ```
+
+**Note:** On first run, macOS may block the app. Go to **System Preferences > Security & Privacy > General** and click "Open Anyway".
+
+**Optional:** Move to Applications:
+```bash
+mv SleepStopper-macos-x64 /Applications/SleepStopper
+```
 
 ### Build from Source
 
+Requires [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
+
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/SleepStopper.git
+git clone https://github.com/hokagedami/SleepStopper.git
 cd SleepStopper
 
-# Build
+# Build and run
 dotnet build
-
-# Run
 dotnet run --project SleepStopper
-```
 
-### Publish Self-Contained
-
-```bash
-# Windows
-dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-x64 --self-contained true
-
-# Linux
-dotnet publish SleepStopper/SleepStopper.csproj -c Release -r linux-x64 --self-contained true
-
-# macOS
-dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-x64 --self-contained true
+# Or publish a self-contained executable
+dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish SleepStopper/SleepStopper.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true
+dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
 ## Usage
 
-1. Launch the application
-2. Click **ACTIVATE** to prevent sleep
-3. Click **DEACTIVATE** to allow sleep again
-4. Close the window to minimize to system tray
-5. Right-click the tray icon for options:
-   - Activate/Deactivate sleep prevention
-   - Show the main window
-   - Exit the application
+### Starting the Application
+
+Launch `SleepStopper.exe` (Windows), `SleepStopper` (Linux/macOS), or run from source.
+
+### Main Window
+
+| Element | Description |
+|---------|-------------|
+| **ACTIVATE** button (green) | Click to prevent system sleep |
+| **DEACTIVATE** button (red) | Click to allow system sleep |
+| **Log panel** | Shows activity history and status messages |
+
+### Basic Operation
+
+1. **Prevent Sleep:** Click the green **ACTIVATE** button
+   - Button turns red and shows **DEACTIVATE**
+   - Log displays: "System Auto-Sleep Deactivated"
+   - Your computer will now stay awake
+
+2. **Allow Sleep:** Click the red **DEACTIVATE** button
+   - Button turns green and shows **ACTIVATE**
+   - Log displays: "System Auto-Sleep Activated"
+   - Normal sleep behavior is restored
+
+### System Tray
+
+The application minimizes to the system tray when you close the window:
+
+- **Double-click tray icon:** Restore the main window
+- **Right-click tray icon:** Opens context menu
+  - **ACTIVATE/DEACTIVATE:** Toggle sleep prevention
+  - **Show:** Restore the main window
+  - **Exit:** Close the application completely
+
+### Closing the Application
+
+- **Clicking X (close button):** Minimizes to system tray (app keeps running)
+- **Right-click tray > Exit:** Fully closes the application and restores normal sleep
 
 ## How It Works
 
 ### Windows
-Uses the Windows API `SetThreadExecutionState` to inform the system that the application is in use and prevent sleep.
+Uses the Windows API `SetThreadExecutionState` with `ES_DISPLAY_REQUIRED` and `ES_CONTINUOUS` flags to inform the system that the display is in use, preventing both display sleep and system sleep.
 
 ### Linux
-Spawns a `systemd-inhibit` process that blocks idle and sleep states while the application is active.
+Spawns a `systemd-inhibit` process with `--what=idle:sleep` that creates an inhibitor lock, preventing the system from entering idle or sleep states while active.
 
 ### macOS
-Spawns a `caffeinate` process that prevents the display from sleeping while the application is active.
+Spawns a `caffeinate -d` process that asserts a "prevent display sleep" assertion, keeping the display and system awake.
+
+## Troubleshooting
+
+### Windows
+- **App won't start:** Ensure you extracted all files from the zip, not just the .exe
+- **Sleep still occurs:** Run as Administrator for full compatibility
+
+### Linux
+- **Permission denied:** Run `chmod +x SleepStopper` to make it executable
+- **systemd-inhibit not found:** Install systemd or use a systemd-based distribution
+- **No tray icon:** Ensure your desktop environment supports system tray (may need an extension on GNOME)
+
+### macOS
+- **"App is damaged" error:** Run `xattr -cr /path/to/SleepStopper` to remove quarantine
+- **Blocked by Gatekeeper:** Go to System Preferences > Security & Privacy and allow the app
 
 ## License
 
 This project is open source.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit issues and pull requests.

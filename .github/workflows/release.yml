@@ -6,23 +6,8 @@ on:
       - 'v*'
 
 jobs:
-  build:
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
-        include:
-          - os: windows-latest
-            rid: win-x64
-            artifact: SleepStopper-windows-x64
-          - os: ubuntu-latest
-            rid: linux-x64
-            artifact: SleepStopper-linux-x64
-          - os: macos-latest
-            rid: osx-x64
-            artifact: SleepStopper-macos-x64
-
-    runs-on: ${{ matrix.os }}
-
+  build-windows:
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
 
@@ -34,43 +19,187 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Publish Windows x64
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-x64
 
-    - name: Publish
-      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r ${{ matrix.rid }} --self-contained true -p:PublishSingleFile=true -o ./publish/${{ matrix.artifact }}
+    - name: Publish Windows x86
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-x86 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-x86
 
-    - name: Zip artifacts (Windows)
-      if: matrix.os == 'windows-latest'
-      run: Compress-Archive -Path ./publish/${{ matrix.artifact }}/* -DestinationPath ./${{ matrix.artifact }}.zip
+    - name: Publish Windows ARM64
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-arm64
+
+    - name: Create Windows x64 zip
+      run: Compress-Archive -Path ./publish/win-x64/* -DestinationPath ./SleepStopper-windows-x64.zip
       shell: pwsh
 
-    - name: Zip artifacts (Linux/macOS)
-      if: matrix.os != 'windows-latest'
-      run: cd ./publish && zip -r ../${{ matrix.artifact }}.zip ${{ matrix.artifact }}
+    - name: Create Windows x86 zip
+      run: Compress-Archive -Path ./publish/win-x86/* -DestinationPath ./SleepStopper-windows-x86.zip
+      shell: pwsh
 
-    - name: Upload artifact
+    - name: Create Windows ARM64 zip
+      run: Compress-Archive -Path ./publish/win-arm64/* -DestinationPath ./SleepStopper-windows-arm64.zip
+      shell: pwsh
+
+    - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.artifact }}
-        path: ./${{ matrix.artifact }}.zip
+        name: windows-builds
+        path: |
+          ./SleepStopper-windows-x64.zip
+          ./SleepStopper-windows-x86.zip
+          ./SleepStopper-windows-arm64.zip
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish Linux x64
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/linux-x64
+
+    - name: Publish Linux ARM64
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r linux-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish/linux-arm64
+
+    - name: Set executable permissions
+      run: |
+        chmod +x ./publish/linux-x64/SleepStopper
+        chmod +x ./publish/linux-arm64/SleepStopper
+
+    - name: Create Linux x64 tarball
+      run: |
+        mkdir -p ./SleepStopper-linux-x64
+        cp -r ./publish/linux-x64/* ./SleepStopper-linux-x64/
+        tar -czvf SleepStopper-linux-x64.tar.gz SleepStopper-linux-x64
+
+    - name: Create Linux ARM64 tarball
+      run: |
+        mkdir -p ./SleepStopper-linux-arm64
+        cp -r ./publish/linux-arm64/* ./SleepStopper-linux-arm64/
+        tar -czvf SleepStopper-linux-arm64.tar.gz SleepStopper-linux-arm64
+
+    - name: Upload Linux artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-builds
+        path: |
+          ./SleepStopper-linux-x64.tar.gz
+          ./SleepStopper-linux-arm64.tar.gz
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Publish macOS x64
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./publish/osx-x64
+
+    - name: Publish macOS ARM64 (Apple Silicon)
+      run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./publish/osx-arm64
+
+    - name: Set executable permissions
+      run: |
+        chmod +x ./publish/osx-x64/SleepStopper
+        chmod +x ./publish/osx-arm64/SleepStopper
+
+    - name: Create macOS x64 tarball
+      run: |
+        mkdir -p ./SleepStopper-macos-x64
+        cp -r ./publish/osx-x64/* ./SleepStopper-macos-x64/
+        tar -czvf SleepStopper-macos-x64.tar.gz SleepStopper-macos-x64
+
+    - name: Create macOS ARM64 tarball
+      run: |
+        mkdir -p ./SleepStopper-macos-arm64
+        cp -r ./publish/osx-arm64/* ./SleepStopper-macos-arm64/
+        tar -czvf SleepStopper-macos-arm64.tar.gz SleepStopper-macos-arm64
+
+    - name: Upload macOS artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-builds
+        path: |
+          ./SleepStopper-macos-x64.tar.gz
+          ./SleepStopper-macos-arm64.tar.gz
 
   release:
-    needs: build
+    needs: [build-windows, build-linux, build-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
+    - uses: actions/checkout@v4
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: artifacts
 
+    - name: Display artifacts
+      run: find artifacts -type f -name "*"
+
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/**/*.zip
-        generate_release_notes: true
+        files: |
+          artifacts/windows-builds/*.zip
+          artifacts/linux-builds/*.tar.gz
+          artifacts/macos-builds/*.tar.gz
+        body: |
+          ## SleepStopper ${{ github.ref_name }}
+
+          A cross-platform application that prevents your computer from going to sleep.
+
+          ### Installation
+
+          #### Windows
+          1. Download `SleepStopper-windows-x64.zip` (or x86/arm64 for other architectures)
+          2. Extract the zip file
+          3. Run `SleepStopper.exe`
+
+          #### Linux
+          1. Download `SleepStopper-linux-x64.tar.gz` (or arm64 for ARM devices)
+          2. Extract: `tar -xzf SleepStopper-linux-x64.tar.gz`
+          3. Run: `chmod +x SleepStopper && ./SleepStopper`
+
+          #### macOS
+          1. Download `SleepStopper-macos-x64.tar.gz` (or arm64 for Apple Silicon)
+          2. Extract: `tar -xzf SleepStopper-macos-x64.tar.gz`
+          3. Run: `chmod +x SleepStopper && ./SleepStopper`
+          4. If blocked, go to System Preferences > Security & Privacy > Allow
+
+          ### Usage
+          - Click **ACTIVATE** to prevent sleep (button turns red)
+          - Click **DEACTIVATE** to allow sleep (button turns green)
+          - Close window to minimize to system tray
+          - Right-click tray icon for menu (Show/Exit)
+
+          ### Downloads
+
+          | Platform | Architecture | File |
+          |----------|--------------|------|
+          | Windows | x64 (64-bit) | `SleepStopper-windows-x64.zip` |
+          | Windows | x86 (32-bit) | `SleepStopper-windows-x86.zip` |
+          | Windows | ARM64 | `SleepStopper-windows-arm64.zip` |
+          | Linux | x64 (64-bit) | `SleepStopper-linux-x64.tar.gz` |
+          | Linux | ARM64 | `SleepStopper-linux-arm64.tar.gz` |
+          | macOS | x64 (Intel) | `SleepStopper-macos-x64.tar.gz` |
+          | macOS | ARM64 (Apple Silicon) | `SleepStopper-macos-arm64.tar.gz` |
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
