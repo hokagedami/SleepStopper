@@ -16,6 +16,9 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
+    - name: Install WiX Toolset
+      run: dotnet tool install --global wix
+
     - name: Restore dependencies
       run: dotnet restore
 
@@ -27,6 +30,13 @@ jobs:
 
     - name: Publish Windows ARM64
       run: dotnet publish SleepStopper/SleepStopper.csproj -c Release -r win-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o ./publish/win-arm64
+
+    - name: Copy exe files for direct download
+      run: |
+        Copy-Item ./publish/win-x64/SleepStopper.exe ./SleepStopper-windows-x64.exe
+        Copy-Item ./publish/win-x86/SleepStopper.exe ./SleepStopper-windows-x86.exe
+        Copy-Item ./publish/win-arm64/SleepStopper.exe ./SleepStopper-windows-arm64.exe
+      shell: pwsh
 
     - name: Create Windows x64 zip
       run: Compress-Archive -Path ./publish/win-x64/* -DestinationPath ./SleepStopper-windows-x64.zip
@@ -40,14 +50,117 @@ jobs:
       run: Compress-Archive -Path ./publish/win-arm64/* -DestinationPath ./SleepStopper-windows-arm64.zip
       shell: pwsh
 
+    - name: Create WiX source for x64 MSI
+      run: |
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+          <Package Name="SleepStopper" Manufacturer="SleepStopper" Version="1.0.0.0" UpgradeCode="6E4C7F2A-8B3D-4E5F-9A1C-2D3E4F5A6B7C">
+            <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+            <MediaTemplate EmbedCab="yes" />
+            <Feature Id="Main">
+              <ComponentGroupRef Id="MainComponents" />
+            </Feature>
+          </Package>
+          <Fragment>
+            <StandardDirectory Id="ProgramFiles64Folder">
+              <Directory Id="INSTALLFOLDER" Name="SleepStopper" />
+            </StandardDirectory>
+          </Fragment>
+          <Fragment>
+            <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
+              <Component Id="MainExecutable">
+                <File Id="SleepStopperExe" Source="publish/win-x64/SleepStopper.exe" KeyPath="yes">
+                  <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="SleepStopper" WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+                </File>
+              </Component>
+            </ComponentGroup>
+          </Fragment>
+        </Wix>
+        "@ | Out-File -FilePath SleepStopper-x64.wxs -Encoding UTF8
+      shell: pwsh
+
+    - name: Create WiX source for x86 MSI
+      run: |
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+          <Package Name="SleepStopper" Manufacturer="SleepStopper" Version="1.0.0.0" UpgradeCode="6E4C7F2A-8B3D-4E5F-9A1C-2D3E4F5A6B7D">
+            <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+            <MediaTemplate EmbedCab="yes" />
+            <Feature Id="Main">
+              <ComponentGroupRef Id="MainComponents" />
+            </Feature>
+          </Package>
+          <Fragment>
+            <StandardDirectory Id="ProgramFilesFolder">
+              <Directory Id="INSTALLFOLDER" Name="SleepStopper" />
+            </StandardDirectory>
+          </Fragment>
+          <Fragment>
+            <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
+              <Component Id="MainExecutable">
+                <File Id="SleepStopperExe" Source="publish/win-x86/SleepStopper.exe" KeyPath="yes">
+                  <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="SleepStopper" WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+                </File>
+              </Component>
+            </ComponentGroup>
+          </Fragment>
+        </Wix>
+        "@ | Out-File -FilePath SleepStopper-x86.wxs -Encoding UTF8
+      shell: pwsh
+
+    - name: Create WiX source for ARM64 MSI
+      run: |
+        @"
+        <?xml version="1.0" encoding="UTF-8"?>
+        <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+          <Package Name="SleepStopper" Manufacturer="SleepStopper" Version="1.0.0.0" UpgradeCode="6E4C7F2A-8B3D-4E5F-9A1C-2D3E4F5A6B7E">
+            <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+            <MediaTemplate EmbedCab="yes" />
+            <Feature Id="Main">
+              <ComponentGroupRef Id="MainComponents" />
+            </Feature>
+          </Package>
+          <Fragment>
+            <StandardDirectory Id="ProgramFiles64Folder">
+              <Directory Id="INSTALLFOLDER" Name="SleepStopper" />
+            </StandardDirectory>
+          </Fragment>
+          <Fragment>
+            <ComponentGroup Id="MainComponents" Directory="INSTALLFOLDER">
+              <Component Id="MainExecutable">
+                <File Id="SleepStopperExe" Source="publish/win-arm64/SleepStopper.exe" KeyPath="yes">
+                  <Shortcut Id="StartMenuShortcut" Directory="ProgramMenuFolder" Name="SleepStopper" WorkingDirectory="INSTALLFOLDER" Advertise="yes" />
+                </File>
+              </Component>
+            </ComponentGroup>
+          </Fragment>
+        </Wix>
+        "@ | Out-File -FilePath SleepStopper-arm64.wxs -Encoding UTF8
+      shell: pwsh
+
+    - name: Build MSI installers
+      run: |
+        wix build SleepStopper-x64.wxs -o SleepStopper-windows-x64.msi -arch x64
+        wix build SleepStopper-x86.wxs -o SleepStopper-windows-x86.msi -arch x86
+        wix build SleepStopper-arm64.wxs -o SleepStopper-windows-arm64.msi -arch arm64
+      shell: pwsh
+
     - name: Upload Windows artifacts
       uses: actions/upload-artifact@v4
       with:
         name: windows-builds
         path: |
+          ./SleepStopper-windows-x64.exe
+          ./SleepStopper-windows-x86.exe
+          ./SleepStopper-windows-arm64.exe
           ./SleepStopper-windows-x64.zip
           ./SleepStopper-windows-x86.zip
           ./SleepStopper-windows-arm64.zip
+          ./SleepStopper-windows-x64.msi
+          ./SleepStopper-windows-x86.msi
+          ./SleepStopper-windows-arm64.msi
 
   build-linux:
     runs-on: ubuntu-latest
@@ -158,6 +271,8 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: |
+          artifacts/windows-builds/*.exe
+          artifacts/windows-builds/*.msi
           artifacts/windows-builds/*.zip
           artifacts/linux-builds/*.tar.gz
           artifacts/macos-builds/*.tar.gz
@@ -168,10 +283,14 @@ jobs:
 
           ### Installation
 
-          #### Windows
-          1. Download `SleepStopper-windows-x64.zip` (or x86/arm64 for other architectures)
-          2. Extract the zip file
-          3. Run `SleepStopper.exe`
+          #### Windows (Installer - Recommended)
+          1. Download `SleepStopper-windows-x64.msi` (or x86/arm64 for other architectures)
+          2. Run the installer
+          3. Launch from Start Menu
+
+          #### Windows (Portable)
+          - **Direct exe**: Download `SleepStopper-windows-x64.exe` and run directly
+          - **Zip archive**: Download `SleepStopper-windows-x64.zip`, extract, and run `SleepStopper.exe`
 
           #### Linux
           1. Download `SleepStopper-linux-x64.tar.gz` (or arm64 for ARM devices)
@@ -194,11 +313,14 @@ jobs:
 
           ### Downloads
 
-          | Platform | Architecture | File |
-          |----------|--------------|------|
-          | Windows | x64 (64-bit) | `SleepStopper-windows-x64.zip` |
-          | Windows | x86 (32-bit) | `SleepStopper-windows-x86.zip` |
-          | Windows | ARM64 | `SleepStopper-windows-arm64.zip` |
+          | Platform | Architecture | Installer | Portable (exe) | Portable (zip) |
+          |----------|--------------|-----------|----------------|----------------|
+          | Windows | x64 (64-bit) | `SleepStopper-windows-x64.msi` | `SleepStopper-windows-x64.exe` | `SleepStopper-windows-x64.zip` |
+          | Windows | x86 (32-bit) | `SleepStopper-windows-x86.msi` | `SleepStopper-windows-x86.exe` | `SleepStopper-windows-x86.zip` |
+          | Windows | ARM64 | `SleepStopper-windows-arm64.msi` | `SleepStopper-windows-arm64.exe` | `SleepStopper-windows-arm64.zip` |
+
+          | Platform | Architecture | Archive |
+          |----------|--------------|---------|
           | Linux | x64 (64-bit) | `SleepStopper-linux-x64.tar.gz` |
           | Linux | ARM64 | `SleepStopper-linux-arm64.tar.gz` |
           | macOS | x64 (Intel) | `SleepStopper-macos-x64.tar.gz` |
