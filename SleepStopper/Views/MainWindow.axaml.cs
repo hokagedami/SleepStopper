@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using SleepStopper.ViewModels;
 
@@ -52,8 +53,13 @@ public partial class MainWindow : Window
         menu.Items.Add(new NativeMenuItemSeparator());
         menu.Items.Add(exitMenuItem);
 
+        var iconUri = new Uri("avares://SleepStopper/sleep.ico");
+        var iconStream = AssetLoader.Open(iconUri);
+        var windowIcon = new WindowIcon(iconStream);
+
         _trayIcon = new TrayIcon
         {
+            Icon = windowIcon,
             ToolTipText = "No Sleeping",
             Menu = menu,
             IsVisible = false
@@ -91,6 +97,18 @@ public partial class MainWindow : Window
                     }
                 };
             }
+        }
+    }
+
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+
+        if (change.Property == WindowStateProperty
+            && change.NewValue is WindowState state
+            && state == WindowState.Minimized)
+        {
+            MinimizeToTray();
         }
     }
 

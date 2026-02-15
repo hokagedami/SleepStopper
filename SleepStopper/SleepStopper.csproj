@@ -22,7 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="sleep.ico" />
+    <AvaloniaResource Include="sleep.ico" />
   </ItemGroup>
 
 </Project>
