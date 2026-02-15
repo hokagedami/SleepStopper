@@ -360,6 +360,14 @@ jobs:
         cp -r ./publish/osx-arm64/* ./SleepStopper-macos-arm64/
         tar -czvf SleepStopper-macos-arm64.tar.gz SleepStopper-macos-arm64
 
+    - name: Free disk space
+      run: |
+        df -h
+        rm -rf ./publish/osx-arm64 ./SleepStopper-macos-arm64
+        rm -rf ./publish/osx-x64/*.pdb
+        sudo rm -rf /usr/local/share/powershell /usr/local/lib/node_modules /usr/local/share/chromium /usr/share/dotnet/shared/Microsoft.AspNetCore.App 2>/dev/null || true
+        df -h
+
     - name: Create macOS x64 app bundle and DMG
       run: |
         # Create .app bundle structure
