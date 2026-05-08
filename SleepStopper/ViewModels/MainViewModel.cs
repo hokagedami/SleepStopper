@@ -1,5 +1,4 @@
 using System.Text;
-using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using SleepStopper.Services;
@@ -26,6 +25,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string _buttonText = "ACTIVATE";
 
     [ObservableProperty]
+    private string _sleepStateLabel = "Inactive";
+
+    [ObservableProperty]
     private bool _isPresenceActive;
 
     [ObservableProperty]
@@ -35,12 +37,24 @@ public partial class MainViewModel : ObservableObject, IDisposable
     private string _presenceStatus = string.Empty;
 
     [ObservableProperty]
+    private string _presenceStateLabel = "Idle";
+
+    [ObservableProperty]
     private string _scheduleSummary = string.Empty;
 
     [ObservableProperty]
     private string _logText = string.Empty;
 
+    [ObservableProperty]
+    private string _currentSection = "dashboard";
+
+    [ObservableProperty]
+    private SettingsViewModel? _settingsPanel;
+
     public bool IsPresenceSupported => _presenceKeeper.IsSupported;
+    public bool IsDashboardSelected => CurrentSection == "dashboard";
+    public bool IsActivitySelected => CurrentSection == "activity";
+    public bool IsSettingsSelected => CurrentSection == "settings";
 
     public event EventHandler? OpenSettingsRequested;
 
@@ -67,8 +81,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         UpdateScheduleSummary();
         PresenceStatus = _presenceKeeper.IsSupported
-            ? $"Presence: idle ({ScheduleSummary})"
-            : "Presence: not supported on this platform";
+            ? $"Within {ScheduleSummary}"
+            : "Not supported on this platform";
+        PresenceStateLabel = _presenceKeeper.IsSupported ? "Idle" : "Unavailable";
 
         AppendLog("Application started successfully....");
         AppendLog("System Auto-Sleep Active.");
@@ -94,6 +109,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _sleepPreventer.Disable();
             IsActive = false;
             ButtonText = "ACTIVATE";
+            SleepStateLabel = "Inactive";
             AppendLog("System Auto-Sleep Activated.");
         }
         else
@@ -101,6 +117,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
             _sleepPreventer.Enable();
             IsActive = true;
             ButtonText = "DEACTIVATE";
+            SleepStateLabel = "Active";
             AppendLog("System Auto-Sleep Deactivated.");
         }
     }
@@ -127,7 +144,51 @@ public partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenSettings()
     {
+        SettingsPanel = new SettingsViewModel(_settings);
+        SettingsPanel.Saved += OnSettingsSaved;
+        SettingsPanel.Cancelled += OnSettingsCancelled;
+        CurrentSection = "settings";
         OpenSettingsRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    private void NavigateDashboard() => CurrentSection = "dashboard";
+
+    [RelayCommand]
+    private void NavigateActivity() => CurrentSection = "activity";
+
+    [RelayCommand]
+    private void NavigateSettings() => OpenSettings();
+
+    private void OnSettingsSaved(object? sender, AppSettings settings)
+    {
+        ApplySettings(settings);
+        UnhookSettingsPanel();
+        SettingsPanel = null;
+        CurrentSection = "dashboard";
+    }
+
+    private void OnSettingsCancelled(object? sender, EventArgs e)
+    {
+        UnhookSettingsPanel();
+        SettingsPanel = null;
+        CurrentSection = "dashboard";
+    }
+
+    private void UnhookSettingsPanel()
+    {
+        if (SettingsPanel != null)
+        {
+            SettingsPanel.Saved -= OnSettingsSaved;
+            SettingsPanel.Cancelled -= OnSettingsCancelled;
+        }
+    }
+
+    partial void OnCurrentSectionChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsDashboardSelected));
+        OnPropertyChanged(nameof(IsActivitySelected));
+        OnPropertyChanged(nameof(IsSettingsSelected));
     }
 
     public AppSettings CurrentSettings => _settings;
@@ -149,8 +210,8 @@ public partial class MainViewModel : ObservableObject, IDisposable
         else
         {
             PresenceStatus = _presenceKeeper.IsSupported
-                ? $"Presence: idle ({ScheduleSummary})"
-                : "Presence: not supported on this platform";
+                ? $"Within {ScheduleSummary}"
+                : "Not supported on this platform";
         }
     }
 
@@ -171,6 +232,7 @@ public partial class MainViewModel : ObservableObject, IDisposable
     {
         IsPresenceActive = true;
         PresenceButtonText = "STOP PRESENCE";
+        PresenceStateLabel = "Active";
         _wasNudgingLastTick = false;
         AppendLog($"Active Presence started ({ScheduleSummary}).");
         StartTickScheduler();
@@ -205,8 +267,9 @@ public partial class MainViewModel : ObservableObject, IDisposable
         StopTickScheduler();
         IsPresenceActive = false;
         PresenceButtonText = "START PRESENCE";
+        PresenceStateLabel = "Idle";
         _wasNudgingLastTick = false;
-        PresenceStatus = $"Presence: idle ({ScheduleSummary})";
+        PresenceStatus = $"Within {ScheduleSummary}";
         AppendLog(reason);
     }
 
@@ -251,15 +314,18 @@ public partial class MainViewModel : ObservableObject, IDisposable
 
         if (nudging)
         {
-            PresenceStatus = $"Presence: active (last nudge {now:HH:mm:ss})";
+            PresenceStatus = $"Active (last nudge {now:HH:mm:ss})";
+            PresenceStateLabel = "Active";
         }
         else if (screenLocked)
         {
-            PresenceStatus = "Presence: paused (screen locked)";
+            PresenceStatus = "Paused (screen locked)";
+            PresenceStateLabel = "Paused";
         }
         else
         {
-            PresenceStatus = $"Presence: paused (outside {ScheduleSummary})";
+            PresenceStatus = $"Paused (outside {ScheduleSummary})";
+            PresenceStateLabel = "Paused";
         }
     }
 

@@ -1,93 +1,277 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:SleepStopper.ViewModels"
+        xmlns:views="using:SleepStopper.Views"
         x:Class="SleepStopper.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="No Sleeping"
-        Width="380"
-        Height="360"
-        MinWidth="380"
-        MinHeight="360"
-        MaxWidth="480"
-        MaxHeight="420"
-        CanResize="True"
-        WindowStartupLocation="CenterScreen">
+        Title="SleepStopper"
+        Width="940"
+        Height="640"
+        MinWidth="780"
+        MinHeight="540"
+        Background="{DynamicResource SurfaceBrush}"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="False">
 
     <Window.Styles>
-        <Style Selector="Button.action">
+        <!-- Nav button -->
+        <Style Selector="Button.nav">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="HorizontalAlignment" Value="Stretch"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Padding" Value="14,10"/>
+            <Setter Property="CornerRadius" Value="8"/>
             <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.nav:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1f242e"/>
+            <Setter Property="TextElement.Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.nav.selected">
+            <Setter Property="Background" Value="#222732"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="Button.nav.selected /template/ ContentPresenter">
+            <Setter Property="Background" Value="#222732"/>
+        </Style>
+
+        <!-- Card -->
+        <Style Selector="Border.card">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="22"/>
+        </Style>
+
+        <!-- Status pill -->
+        <Style Selector="Border.pill">
+            <Setter Property="CornerRadius" Value="999"/>
+            <Setter Property="Padding" Value="10,4"/>
+            <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style Selector="Border.pill.idle">
+            <Setter Property="Background" Value="#1d212a"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+        </Style>
+        <Style Selector="Border.pill.active">
+            <Setter Property="Background" Value="#143524"/>
+            <Setter Property="BorderBrush" Value="#1f6c4a"/>
+        </Style>
+        <Style Selector="Border.pill.warn">
+            <Setter Property="Background" Value="#3a2a14"/>
+            <Setter Property="BorderBrush" Value="#7a5824"/>
+        </Style>
+
+        <!-- Status dot -->
+        <Style Selector="Ellipse.dot">
+            <Setter Property="Width" Value="8"/>
+            <Setter Property="Height" Value="8"/>
+        </Style>
+
+        <!-- Section heading -->
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="22"/>
             <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.body">
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+
+        <!-- Primary action button -->
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Width" Value="160"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="HorizontalContentAlignment" Value="Center"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        <Style Selector="Button.action.inactive">
-            <Setter Property="Background" Value="#3CB371"/>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
         </Style>
-        <Style Selector="Button.action.inactive:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#2E8B57"/>
+
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="18,10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Cursor" Value="Hand"/>
         </Style>
-        <Style Selector="Button.action.active">
-            <Setter Property="Background" Value="#DC143C"/>
-        </Style>
-        <Style Selector="Button.action.active:pointerover /template/ ContentPresenter">
-            <Setter Property="Background" Value="#B22222"/>
+        <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1f242e"/>
         </Style>
     </Window.Styles>
 
-    <Grid RowDefinitions="Auto,Auto,Auto,Auto,*" Margin="10">
-        <Button Grid.Row="0"
-                Classes="action"
-                Classes.active="{Binding IsActive}"
-                Classes.inactive="{Binding !IsActive}"
-                Content="{Binding ButtonText}"
-                Command="{Binding ToggleCommand}"
-                HorizontalAlignment="Center"
-                Margin="0,8,0,4"/>
+    <Grid ColumnDefinitions="220,*">
+        <!-- Sidebar -->
+        <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource AppBorderBrush}" BorderThickness="0,0,1,0">
+            <DockPanel LastChildFill="True">
+                <StackPanel DockPanel.Dock="Top" Margin="20,24,20,16" Spacing="2">
+                    <TextBlock Text="SleepStopper" FontSize="17" FontWeight="Bold" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                    <TextBlock Text="System awake &amp; presence" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"/>
+                </StackPanel>
 
-        <Button Grid.Row="1"
-                Classes="action"
-                Classes.active="{Binding IsPresenceActive}"
-                Classes.inactive="{Binding !IsPresenceActive}"
-                Content="{Binding PresenceButtonText}"
-                Command="{Binding TogglePresenceCommand}"
-                IsEnabled="{Binding IsPresenceSupported}"
-                HorizontalAlignment="Center"
-                Margin="0,4,0,4"/>
+                <StackPanel DockPanel.Dock="Bottom" Margin="20,12,20,20" Spacing="6">
+                    <Border Background="{DynamicResource ElevatedBrush}" CornerRadius="8" Padding="12,10">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="Schedule" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}"/>
+                            <TextBlock Text="{Binding ScheduleSummary}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
 
-        <TextBlock Grid.Row="2"
-                   Text="{Binding PresenceStatus}"
-                   HorizontalAlignment="Center"
-                   FontSize="11"
-                   Opacity="0.8"
-                   Margin="0,2,0,2"/>
+                <StackPanel Margin="12,8" Spacing="2">
+                    <Button Classes="nav" Classes.selected="{Binding IsDashboardSelected}" Command="{Binding NavigateDashboardCommand}" Content="Dashboard"/>
+                    <Button Classes="nav" Classes.selected="{Binding IsActivitySelected}" Command="{Binding NavigateActivityCommand}" Content="Activity"/>
+                    <Button Classes="nav" Classes.selected="{Binding IsSettingsSelected}" Command="{Binding NavigateSettingsCommand}" Content="Settings"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
-        <Button Grid.Row="3"
-                Content="Settings..."
-                Command="{Binding OpenSettingsCommand}"
-                HorizontalAlignment="Center"
-                Padding="12,4"
-                Margin="0,2,0,8"/>
+        <!-- Main content -->
+        <Grid Grid.Column="1">
+            <!-- Dashboard -->
+            <ScrollViewer IsVisible="{Binding IsDashboardSelected}">
+                <StackPanel Margin="32,28,32,28" Spacing="20">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Dashboard" Classes="h1"/>
+                        <TextBlock Text="Control system sleep and active presence." Classes="body"/>
+                    </StackPanel>
 
-        <TextBox Grid.Row="4"
-                 Text="{Binding LogText}"
-                 IsReadOnly="True"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 Background="#1E1E1E"
-                 Foreground="White"
-                 FontFamily="Consolas, Courier New, monospace"
-                 FontSize="11"
-                 Margin="20,5,20,10"/>
+                    <!-- Sleep card -->
+                    <Border Classes="card">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Keep system awake" Classes="h2"/>
+                                    <Border Classes="pill" Classes.idle="{Binding !IsActive}" Classes.active="{Binding IsActive}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Ellipse Classes="dot" Fill="{Binding IsActive, Converter={x:Static views:BoolBrushConverter.SuccessOrMuted}}"/>
+                                            <TextBlock Text="{Binding SleepStateLabel}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Blocks display and system sleep using the platform power API." Classes="body" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                          IsChecked="{Binding IsActive, Mode=OneWay}"
+                                          OnContent="On" OffContent="Off"
+                                          Command="{Binding ToggleCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Presence card -->
+                    <Border Classes="card">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Spacing="8">
+                                <StackPanel Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="Active presence" Classes="h2"/>
+                                    <Border Classes="pill"
+                                            Classes.idle="{Binding !IsPresenceActive}"
+                                            Classes.active="{Binding IsPresenceActive}">
+                                        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                                            <Ellipse Classes="dot" Fill="{Binding IsPresenceActive, Converter={x:Static views:BoolBrushConverter.SuccessOrMuted}}"/>
+                                            <TextBlock Text="{Binding PresenceStateLabel}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}"/>
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Simulates a brief keystroke during your scheduled hours so collaboration tools see continued activity." Classes="body" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding PresenceStatus}" Classes="caption"/>
+                            </StackPanel>
+                            <ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                          IsChecked="{Binding IsPresenceActive, Mode=OneWay}"
+                                          IsEnabled="{Binding IsPresenceSupported}"
+                                          OnContent="On" OffContent="Off"
+                                          Command="{Binding TogglePresenceCommand}"/>
+                        </Grid>
+                    </Border>
+
+                    <!-- Recent activity preview -->
+                    <Border Classes="card">
+                        <StackPanel Spacing="12">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Recent activity" Classes="h2"/>
+                                <Button Grid.Column="1" Classes="secondary" Content="View all" Command="{Binding NavigateActivityCommand}"/>
+                            </Grid>
+                            <Border Background="{DynamicResource ElevatedBrush}" CornerRadius="8" Padding="14">
+                                <TextBox Text="{Binding LogText}"
+                                         IsReadOnly="True"
+                                         AcceptsReturn="True"
+                                         TextWrapping="Wrap"
+                                         Background="Transparent"
+                                         BorderThickness="0"
+                                         Foreground="{DynamicResource TextSecondaryBrush}"
+                                         FontFamily="Cascadia Mono, Consolas, monospace"
+                                         FontSize="11"
+                                         MaxHeight="160"/>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Activity full -->
+            <Grid IsVisible="{Binding IsActivitySelected}" Margin="32,28">
+                <Grid RowDefinitions="Auto,Auto,*">
+                    <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,16">
+                        <TextBlock Text="Activity" Classes="h1"/>
+                        <TextBlock Text="Full event log for this session." Classes="body"/>
+                    </StackPanel>
+                    <Border Grid.Row="2" Classes="card" Padding="0">
+                        <TextBox Text="{Binding LogText}"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 TextWrapping="Wrap"
+                                 Background="Transparent"
+                                 BorderThickness="0"
+                                 Padding="18"
+                                 Foreground="{DynamicResource TextPrimaryBrush}"
+                                 FontFamily="Cascadia Mono, Consolas, monospace"
+                                 FontSize="12"/>
+                    </Border>
+                </Grid>
+            </Grid>
+
+            <!-- Settings inline -->
+            <ScrollViewer IsVisible="{Binding IsSettingsSelected}">
+                <ContentControl Content="{Binding SettingsPanel}" Margin="32,28">
+                    <ContentControl.DataTemplates>
+                        <DataTemplate DataType="vm:SettingsViewModel">
+                            <views:SettingsView/>
+                        </DataTemplate>
+                    </ContentControl.DataTemplates>
+                </ContentControl>
+            </ScrollViewer>
+        </Grid>
     </Grid>
 
     <NativeMenu.Menu>
         <NativeMenu>
             <NativeMenuItem Header="Toggle Sleep" Command="{Binding ToggleCommand}"/>
             <NativeMenuItem Header="Toggle Presence" Command="{Binding TogglePresenceCommand}"/>
-            <NativeMenuItem Header="Settings..." Command="{Binding OpenSettingsCommand}"/>
+            <NativeMenuItem Header="Settings..." Command="{Binding NavigateSettingsCommand}"/>
         </NativeMenu>
     </NativeMenu.Menu>
 

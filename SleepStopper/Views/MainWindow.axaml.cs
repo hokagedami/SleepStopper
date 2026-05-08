@@ -1,13 +1,8 @@
 using System;
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Input;
 using Avalonia.Platform;
-using Avalonia.Platform.Storage;
 using SleepStopper.ViewModels;
-using System.Threading.Tasks;
 
 namespace SleepStopper.Views;
 
@@ -20,29 +15,6 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SetupTrayIcon();
-        DataContextChanged += (_, _) => HookSettingsRequest();
-        HookSettingsRequest();
-    }
-
-    private void HookSettingsRequest()
-    {
-        if (DataContext is MainViewModel vm)
-        {
-            vm.OpenSettingsRequested -= OnOpenSettingsRequested;
-            vm.OpenSettingsRequested += OnOpenSettingsRequested;
-        }
-    }
-
-    private async void OnOpenSettingsRequested(object? sender, EventArgs e)
-    {
-        if (DataContext is not MainViewModel vm) return;
-        var settingsVm = new SettingsViewModel(vm.CurrentSettings);
-        var window = new SettingsWindow(settingsVm);
-        await window.ShowDialog(this);
-        if (window.Result is { } result)
-        {
-            vm.ApplySettings(result);
-        }
     }
 
     private void SetupTrayIcon()
@@ -53,7 +25,6 @@ public partial class MainWindow : Window
             if (DataContext is MainViewModel vm)
             {
                 vm.ToggleCommand.Execute(null);
-                toggleMenuItem.Header = vm.IsActive ? "DEACTIVATE" : "ACTIVATE";
             }
         };
 
@@ -84,14 +55,13 @@ public partial class MainWindow : Window
         _trayIcon = new TrayIcon
         {
             Icon = windowIcon,
-            ToolTipText = "No Sleeping",
+            ToolTipText = "SleepStopper",
             Menu = menu,
             IsVisible = false
         };
 
         _trayIcon.Clicked += (_, _) => RestoreFromTray();
 
-        // Update toggle menu item when state changes
         if (DataContext is MainViewModel viewModel)
         {
             viewModel.PropertyChanged += (_, args) =>
