@@ -142,9 +142,9 @@ jobs:
 
     - name: Build MSI installers
       run: |
-        wix build SleepStopper-x64.wxs -o SleepStopper-windows-x64.msi -arch x64
-        wix build SleepStopper-x86.wxs -o SleepStopper-windows-x86.msi -arch x86
-        wix build SleepStopper-arm64.wxs -o SleepStopper-windows-arm64.msi -arch arm64
+        wix build SleepStopper-x64.wxs -o SleepStopper-windows-x64.msi -arch x64 -acceptEula wix7
+        wix build SleepStopper-x86.wxs -o SleepStopper-windows-x86.msi -arch x86 -acceptEula wix7
+        wix build SleepStopper-arm64.wxs -o SleepStopper-windows-arm64.msi -arch arm64 -acceptEula wix7
       shell: pwsh
 
     - name: Upload Windows artifacts
