@@ -7,6 +7,7 @@ using Avalonia.Input;
 using Avalonia.Platform;
 using Avalonia.Platform.Storage;
 using SleepStopper.ViewModels;
+using System.Threading.Tasks;
 
 namespace SleepStopper.Views;
 
@@ -19,6 +20,29 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         SetupTrayIcon();
+        DataContextChanged += (_, _) => HookSettingsRequest();
+        HookSettingsRequest();
+    }
+
+    private void HookSettingsRequest()
+    {
+        if (DataContext is MainViewModel vm)
+        {
+            vm.OpenSettingsRequested -= OnOpenSettingsRequested;
+            vm.OpenSettingsRequested += OnOpenSettingsRequested;
+        }
+    }
+
+    private async void OnOpenSettingsRequested(object? sender, EventArgs e)
+    {
+        if (DataContext is not MainViewModel vm) return;
+        var settingsVm = new SettingsViewModel(vm.CurrentSettings);
+        var window = new SettingsWindow(settingsVm);
+        await window.ShowDialog(this);
+        if (window.Result is { } result)
+        {
+            vm.ApplySettings(result);
+        }
     }
 
     private void SetupTrayIcon()
