@@ -1,0 +1,139 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:SleepStopper.ViewModels"
+             x:Class="SleepStopper.Views.SettingsView"
+             x:DataType="vm:SettingsViewModel">
+
+    <UserControl.Styles>
+        <Style Selector="Border.section">
+            <Setter Property="Background" Value="{DynamicResource CardBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="22"/>
+        </Style>
+        <Style Selector="Border.subcard">
+            <Setter Property="Background" Value="{DynamicResource ElevatedBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource AppBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="14,12"/>
+        </Style>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="22"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.label">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}"/>
+        </Style>
+        <Style Selector="TextBlock.caption">
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{DynamicResource AccentBrush}"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="22,10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.primary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Padding" Value="22,10"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+        <Style Selector="Button.secondary:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#1f242e"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="20">
+        <StackPanel Spacing="4">
+            <TextBlock Text="Settings" Classes="h1"/>
+            <TextBlock Text="Configure when active presence runs and how the app behaves at startup." Classes="label"/>
+        </StackPanel>
+
+        <Border Classes="section">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Schedule" Classes="h2"/>
+                <CheckBox Content="Weekdays only (Mon–Fri)" IsChecked="{Binding WeekdaysOnly}"/>
+
+                <Border Classes="subcard">
+                    <StackPanel Spacing="10">
+                        <CheckBox Content="Window 1" IsChecked="{Binding Window1Enabled}" FontWeight="SemiBold"/>
+                        <Grid ColumnDefinitions="Auto,*,Auto,*" IsEnabled="{Binding Window1Enabled}">
+                            <TextBlock Grid.Column="0" Text="Start" Classes="label" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TimePicker Grid.Column="1" SelectedTime="{Binding Window1Start}" ClockIdentifier="24HourClock"/>
+                            <TextBlock Grid.Column="2" Text="End" Classes="label" VerticalAlignment="Center" Margin="14,0,10,0"/>
+                            <TimePicker Grid.Column="3" SelectedTime="{Binding Window1End}" ClockIdentifier="24HourClock"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Classes="subcard">
+                    <StackPanel Spacing="10">
+                        <CheckBox Content="Window 2" IsChecked="{Binding Window2Enabled}" FontWeight="SemiBold"/>
+                        <Grid ColumnDefinitions="Auto,*,Auto,*" IsEnabled="{Binding Window2Enabled}">
+                            <TextBlock Grid.Column="0" Text="Start" Classes="label" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                            <TimePicker Grid.Column="1" SelectedTime="{Binding Window2Start}" ClockIdentifier="24HourClock"/>
+                            <TextBlock Grid.Column="2" Text="End" Classes="label" VerticalAlignment="Center" Margin="14,0,10,0"/>
+                            <TimePicker Grid.Column="3" SelectedTime="{Binding Window2End}" ClockIdentifier="24HourClock"/>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Behavior" Classes="h2"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <StackPanel Grid.Column="0" Spacing="2">
+                        <TextBlock Text="Tick interval" FontWeight="SemiBold" FontSize="12" Foreground="{DynamicResource TextPrimaryBrush}"/>
+                        <TextBlock Text="How often the activity simulation runs (5–600 seconds)." Classes="caption"/>
+                    </StackPanel>
+                    <NumericUpDown Grid.Column="1"
+                                   Width="130"
+                                   Minimum="5"
+                                   Maximum="600"
+                                   Increment="5"
+                                   Value="{Binding IntervalSeconds}"
+                                   FormatString="0"/>
+                </Grid>
+                <CheckBox Content="Pause when screen is locked" IsChecked="{Binding PauseWhenLocked}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Classes="section">
+            <StackPanel Spacing="14">
+                <TextBlock Text="Startup" Classes="h2"/>
+                <CheckBox Content="Start sleep prevention on launch" IsChecked="{Binding AutoStartSleepPrevention}"/>
+                <CheckBox Content="Start active presence on launch" IsChecked="{Binding AutoStartPresence}"/>
+            </StackPanel>
+        </Border>
+
+        <TextBlock Text="{Binding ValidationMessage}" Foreground="{DynamicResource DangerBrush}" FontSize="12"/>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Classes="secondary" Content="Cancel" Command="{Binding CancelCommand}"/>
+            <Button Classes="primary" Content="Save changes" Command="{Binding SaveCommand}"/>
+        </StackPanel>
+    </StackPanel>
+</UserControl>
